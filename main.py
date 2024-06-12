@@ -4,6 +4,12 @@ from flask import Flask, send_file, Response
 
 app = Flask(__name__)
 
+def dict_factory(cursor, row):
+    d = {}
+    for idx, col in enumerate(cursor.description):
+        d[col[0]] = row[idx]
+    return d
+
 
 @app.route('/')
 def hello_world():
@@ -13,6 +19,7 @@ def hello_world():
 @app.route('/tasks')
 def get_tasks():
     conn = sqlite3.connect('dane.db')
+    conn.row_factory = dict_factory
     c = conn.cursor()
     c.execute('SELECT id, name, description, due FROM tasks')
     tasks = c.fetchall()
