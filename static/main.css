@@ -1,0 +1,23 @@
+td, th {
+    border: 1px solid;
+    padding: 1em;
+}
+table {
+    border-spacing: 0;
+}
+
+th:first-of-type {
+    border-top-left-radius: 1rem;
+}
+
+th:last-of-type {
+    border-top-right-radius: 1rem;
+}
+
+tr:last-of-type td:first-of-type {
+    border-bottom-left-radius: 1rem;
+}
+
+tr:last-of-type td:last-of-type {
+    border-bottom-right-radius: 1rem;
+}

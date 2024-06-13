@@ -1,14 +1,33 @@
+import dataclasses
 import json
 import sqlite3
+from datetime import datetime
+from dataclasses import dataclass
 from flask import Flask, send_file, Response
 
 app = Flask(__name__)
 
-def dict_factory(cursor, row):
-    d = {}
-    for idx, col in enumerate(cursor.description):
-        d[col[0]] = row[idx]
-    return d
+
+@dataclass(frozen=True, order=True)
+class Task:
+    id: int
+    name: str
+    description: str | None = None
+    due: datetime | None = None
+
+    @staticmethod
+    def from_sql_row(cursor, row):
+        d = {}
+        for idx, col in enumerate(cursor.description):
+            d[col[0]] = row[idx]
+        return Task(**d)
+
+
+class TaskEncoder(json.JSONEncoder):
+    def default(self, task):
+        if isinstance(task, Task):
+            return dataclasses.asdict(task)
+        return super().default(task)
 
 
 @app.route('/')
@@ -19,11 +38,13 @@ def hello_world():
 @app.route('/tasks')
 def get_tasks():
     conn = sqlite3.connect('dane.db')
-    conn.row_factory = dict_factory
+    conn.row_factory = Task.from_sql_row
     c = conn.cursor()
     c.execute('SELECT id, name, description, due FROM tasks')
     tasks = c.fetchall()
-    return Response(json.dumps(tasks), mimetype='application/json')
+    return Response(json.dumps(tasks, cls=TaskEncoder), mimetype='application/json')
+
+
 
 
 def main():
@@ -41,4 +62,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
