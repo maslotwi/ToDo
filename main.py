@@ -3,7 +3,7 @@ import json
 import sqlite3
 from datetime import datetime
 from dataclasses import dataclass
-from flask import Flask, send_file, Response
+from flask import Flask, send_file, Response, request
 
 app = Flask(__name__)
 
@@ -35,16 +35,32 @@ def hello_world():
     return send_file('./static/index.html')
 
 
-@app.route('/tasks')
+@app.route('/tasks', methods=['GET'])
 def get_tasks():
     conn = sqlite3.connect('dane.db')
     conn.row_factory = Task.from_sql_row
     c = conn.cursor()
-    c.execute('SELECT id, name, description, due FROM tasks')
+    c.execute('SELECT id, name, description, due FROM Tasks')
     tasks = c.fetchall()
     return Response(json.dumps(tasks, cls=TaskEncoder), mimetype='application/json')
 
 
+@app.route('/tasks', methods=['POST'])
+def add_task():
+    conn = sqlite3.connect('dane.db')
+    c = conn.cursor()
+    c.execute("INSERT INTO Tasks VALUES (null, ?, ?, ?)", (request.json['name'], request.json['description'], request.json['due']))
+    conn.commit()
+    return '{}'
+
+
+@app.route('/tasks', methods=['DELETE'])
+def delete_task():
+    conn = sqlite3.connect('dane.db')
+    c = conn.cursor()
+    c.execute("DELETE FROM Tasks where id=?", (request.json['id'],))
+    conn.commit()
+    return "{}"
 
 
 def main():
@@ -57,7 +73,7 @@ def main():
     description VARCHAR(1000),
     due DATE
     );''')
-    app.run()
+    app.run(host='0.0.0.0', port=8080)
 
 
 if __name__ == '__main__':

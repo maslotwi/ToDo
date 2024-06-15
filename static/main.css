@@ -1,9 +1,50 @@
+body {
+    background: black;
+    color: white;
+}
+
+h1 {
+    text-align: center;
+}
+
+button {
+    background-color: blueviolet;
+    border: none;
+    border-radius: 0.2em;
+    padding: 0.5em;
+    color: white;
+}
+
 td, th {
-    border: 1px solid;
-    padding: 1em;
+    position: relative;
+    border: 3px solid lightgray;
+    padding: 0.5em;
 }
 table {
     border-spacing: 0;
+}
+
+#main {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.center {
+    text-align: center;
+}
+
+.func {
+    margin: auto;
+    display: block;
+}
+
+.arrow {
+    position: absolute;
+    right: 0.5em;
+    float: right;
+    width: 1em;
+    height: 1em;
 }
 
 th:first-of-type {
