@@ -6,9 +6,18 @@ async function getTasks() {
   return await response.json();
 }
 
+function strip(x) {
+  if (x === null)
+    return null
+  return x.trim()
+}
+
 async function addTask() {
   name = document.getElementById("nazwa").value;
-  if (name === "") return;
+  if (strip(name) === "") {
+    alert("Nie można utworzyć zadania bez nazwy")
+    return
+  }
 
   let description = document.getElementById("desc").value;
   description = description === "" ? null : description;
@@ -22,8 +31,8 @@ async function addTask() {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      name: name,
-      description: description,
+      name: strip(name),
+      description: strip(description),
       due: due
     }),
   });
