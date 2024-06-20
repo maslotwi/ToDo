@@ -187,3 +187,4 @@ fabric.properties
 # this project
 dane.db
 /dane.db-journal
+.fleet

@@ -99,7 +99,15 @@ async function switch_sorting(field) {
   await buildTable();
 }
 
-const make_row = task => `<tr id="${task.id}"><td>${task.name}</td><td>${task.description === null ? "" : task.description}</td><td class="center">${task.due === null ? "" : task.due}</td><td><button onclick="rmTask(${task.id})" class="func">Usuń</button></td></tr>`
+function overdue(days) {
+  if (days === null)
+    return ""
+  if (days<0)
+    return "Po terminie"
+  return days
+}
+
+const make_row = task => `<tr id="${task.id}"><td>${task.name}</td><td>${task.description === null ? "" : task.description}</td><td class="center">${task.due === null ? "" : task.due}</td><td class="center">${overdue(task.days)}</td><td><button onclick="rmTask(${task.id})" class="func">Usuń</button></td></tr>`
 const filter_row = task => task.due !== null || show_no_date
 
 async function buildTable() {
@@ -110,6 +118,7 @@ async function buildTable() {
         <th onclick="switch_sorting('name')">Nazwa<img id="namearw"></th>
         <th onclick="switch_sorting('description')">Opis<img id="descriptionarw"></th>
         <th onclick="switch_sorting('due')">Data<img id="duearw"></th>
+        <th onclick="switch_sorting('due')">Pozostało dni</th>
         <th onclick="show_no_date = !show_no_date; buildTable()">Dodaj/Usuń</th>
       </tr>
       
@@ -119,6 +128,7 @@ async function buildTable() {
         <td><input id="nazwa"></td>
         <td><textarea id="desc"></textarea></td>
         <td><input id="due" type="date"></td>
+        <td></td>
         <td><button onclick="addTask()" class="func">Dodaj</button></td>
       </tr>
     </table>`

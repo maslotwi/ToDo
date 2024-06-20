@@ -7,6 +7,11 @@ cd ToDo
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
+mkdir build
+cd build
+cmake ..
+make
+cd ..
 python3 main.py
 ```
 
@@ -16,6 +21,6 @@ enter the tasks' short name, and optionally a description and due date, finally 
 
 To delete a task just press the delete button next to the task to be removed.
 
-To sort by a column click on its header.
+To sort by a column click on its header (the date and days left fields are connected).
 
 To only show tasks with due dates press the **Add/Remove** column header.

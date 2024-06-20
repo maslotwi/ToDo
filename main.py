@@ -1,34 +1,62 @@
 import dataclasses
 import json
 import sqlite3
-from ctypes import cdll
+from typing import Iterable, Generator
+from ctypes import cdll, c_time_t, POINTER, c_int
 from datetime import datetime
 from dataclasses import dataclass
 from flask import Flask, send_file, Response, request
 
+days = cdll.LoadLibrary('build/libdays.so')
+days.calculate_days.argtypes = [POINTER(c_time_t), c_int]
+days.calculate_days.restype = POINTER(c_int)
+
 app = Flask(__name__)
 
 
-@dataclass(frozen=True, order=True)
+
+@dataclass(order=True)
 class Task:
     id: int
     name: str
     description: str | None = None
     due: datetime | None = None
+    days: int | None = None
 
     @staticmethod
     def from_sql_row(cursor, row):
         d = {}
         for idx, col in enumerate(cursor.description):
-            d[col[0]] = row[idx]
+            if col[0] == 'due' and row[idx] is not None:
+                d['due'] = datetime.fromisoformat(row[idx])
+            else:
+                d[col[0]] = row[idx]
         return Task(**d)
 
 
 class TaskEncoder(json.JSONEncoder):
     def default(self, task):
         if isinstance(task, Task):
-            return dataclasses.asdict(task)
+            x = dataclasses.asdict(task)
+            if x['due'] is not None:
+                x['due'] = f"{task.due:%Y-%m-%d}"
+            return x
         return super().default(task)
+
+
+def calculate_days(tasks: Iterable[Task]) -> Generator[Task,None,None]:
+    tasks = list(tasks)
+    dane = (c_time_t * len(tasks))()
+    for i, task in enumerate(tasks):
+        if task.due is None:
+            dane[i] = 0
+        else:
+            dane[i] = int(task.due.timestamp())
+    wynik = days.calculate_days(dane, len(dane))
+    for i, task in enumerate(tasks):
+        if task.due is not None:
+            task.days = wynik[i]
+        yield task
 
 
 @app.route('/')
@@ -43,7 +71,7 @@ def get_tasks():
     c = conn.cursor()
     c.execute('SELECT id, name, description, due FROM Tasks')
     tasks = c.fetchall()
-    return Response(json.dumps(tasks, cls=TaskEncoder), mimetype='application/json')
+    return Response(json.dumps(list(calculate_days(tasks)), cls=TaskEncoder), mimetype='application/json')
 
 
 @app.route('/tasks', methods=['POST'])
