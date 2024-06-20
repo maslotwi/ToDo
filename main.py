@@ -14,7 +14,6 @@ days.calculate_days.restype = POINTER(c_int)
 app = Flask(__name__)
 
 
-
 @dataclass(order=True)
 class Task:
     id: int
@@ -44,7 +43,7 @@ class TaskEncoder(json.JSONEncoder):
         return super().default(task)
 
 
-def calculate_days(tasks: Iterable[Task]) -> Generator[Task,None,None]:
+def calculate_days(tasks: Iterable[Task]) -> Generator[Task, None, None]:
     tasks = list(tasks)
     dane = (c_time_t * len(tasks))()
     for i, task in enumerate(tasks):
@@ -78,9 +77,10 @@ def get_tasks():
 def add_task():
     conn = sqlite3.connect('dane.db')
     c = conn.cursor()
-    c.execute("INSERT INTO Tasks VALUES (null, ?, ?, ?)", (request.json['name'], request.json['description'], request.json['due']))
+    c.execute("INSERT INTO Tasks VALUES (null, ?, ?, ?)",
+              (request.json['name'], request.json['description'], request.json['due']))
     conn.commit()
-    return '{}'
+    return ''
 
 
 @app.route('/tasks', methods=['DELETE'])
@@ -89,7 +89,7 @@ def delete_task():
     c = conn.cursor()
     c.execute("DELETE FROM Tasks where id=?", (request.json['id'],))
     conn.commit()
-    return "{}"
+    return ''
 
 
 def main():
