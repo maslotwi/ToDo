@@ -2,14 +2,15 @@ import dataclasses
 import json
 import sqlite3
 from typing import Iterable, Generator
-from ctypes import cdll, c_time_t, POINTER, c_int
+from ctypes import cdll, c_time_t, POINTER, c_int64
 from datetime import datetime
 from dataclasses import dataclass
 from flask import Flask, send_file, Response, request
 
 days = cdll.LoadLibrary('build/libdays.so')
-days.calculate_days.argtypes = [POINTER(c_time_t), c_int]
-days.calculate_days.restype = POINTER(c_int)
+days.calculate_days.argtypes = [POINTER(c_time_t), c_int64]
+days.calculate_days.restype = POINTER(c_int64)
+days.free_days.argtypes = [POINTER(c_time_t)]
 
 app = Flask(__name__)
 
@@ -51,11 +52,12 @@ def calculate_days(tasks: Iterable[Task]) -> Generator[Task, None, None]:
             dane[i] = 0
         else:
             dane[i] = int(task.due.timestamp())
-    wynik = days.calculate_days(dane, len(dane))
+    wynik = days.calculate_days(dane, len(tasks))
     for i, task in enumerate(tasks):
         if task.due is not None:
-            task.days = wynik[i]
+            task.days = int(wynik[i])
         yield task
+    days.free_days(wynik)
 
 
 @app.route('/')
